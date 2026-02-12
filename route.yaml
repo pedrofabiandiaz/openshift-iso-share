@@ -1,0 +1,16 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: iso-share
+  labels:
+    app: iso-share
+spec:
+  to:
+    kind: Service
+    name: iso-share
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+  wildcardPolicy: None
