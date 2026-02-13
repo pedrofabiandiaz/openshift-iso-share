@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - pvc.yaml
   - nginx-configmap.yaml
+  - buildconfig.yaml
   - deployment.yaml
   - service.yaml
   - route.yaml

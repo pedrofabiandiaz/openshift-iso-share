@@ -25,9 +25,12 @@ POD=$(oc get pods -l app=iso-share -o jsonpath='{.items[0].metadata.name}')
 
 # Upload your ISO
 oc cp /path/to/your-image.iso $POD:/usr/share/nginx/html/
+
+# Or with custom image: rsync for large files (resumable)
+oc rsync /path/to/your-image.iso $POD:/usr/share/nginx/html/
 ```
 
-> **Note:** `oc rsync` does not work with this deployment—the nginx image does not include rsync. Use `oc cp` for uploads.
+> **Note:** `oc rsync` requires the [custom image with rsync](#optional-custom-image-with-rsync). Use `oc cp` with the default image.
 
 ## Accessing the ISO
 
@@ -44,12 +47,15 @@ POD=$(oc get pods -l app=iso-share -o jsonpath='{.items[0].metadata.name}')
 oc cp $POD:/usr/share/nginx/html/your-image.iso ./backup-your-image.iso
 ```
 
-### Copy directory (`oc cp`)
+### Copy directory with rsync (`oc rsync`)
 
-The nginx image does not include rsync, so `oc rsync` will not work. Use `oc cp` to back up the entire directory:
+If you built the [custom image with rsync](#optional-custom-image-with-rsync), `oc rsync` supports resumable transfers. Otherwise use `oc cp`:
 
 ```bash
 POD=$(oc get pods -l app=iso-share -o jsonpath='{.items[0].metadata.name}')
+# With custom image (rsync - resumable):
+oc rsync $POD:/usr/share/nginx/html/ ./local-backup-dir/
+# With default image (oc cp):
 oc cp $POD:/usr/share/nginx/html/ ./local-backup-dir/
 ```
 
@@ -65,6 +71,23 @@ curl -k -o backup-your-image.iso "https://$ROUTE/your-image.iso"
 ### PVC snapshot
 
 For a volume-level backup, create a VolumeSnapshot (requires a StorageClass that supports snapshots, e.g. OpenShift Data Foundation). Use the OpenShift Console: **Storage → Persistent Volume Claims →** select `iso-storage` **→ Actions → Create Snapshot**. Or apply a `VolumeSnapshot` manifest for your storage provider.
+
+## Optional: Custom image with rsync
+
+The default nginx image does not include rsync. To enable `oc rsync` for resumable uploads and backups, build a custom image:
+
+```bash
+# From the repo root, start the binary build (uploads Dockerfile + context)
+oc start-build iso-share --from-dir=. --follow
+
+# Update the deployment to use the custom image
+oc set image deployment/iso-share nginx=iso-share:latest
+
+# Wait for rollout
+oc rollout status deployment/iso-share
+```
+
+After this, `oc rsync` works for both uploads and backups.
 
 ## Customization
 
