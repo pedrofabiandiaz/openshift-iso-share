@@ -39,6 +39,41 @@ oc rsync /path/to/your-image.iso $POD:/usr/share/nginx/html/
 2. Open `https://<hostname>/` to see the directory listing
 3. Click your ISO filename to download, or use: `https://<hostname>/your-image.iso`
 
+## Backing up the ISO
+
+### Copy from the pod to your machine (`oc cp`)
+
+```bash
+POD=$(oc get pods -l app=iso-share -o jsonpath='{.items[0].metadata.name}')
+oc cp $POD:/usr/share/nginx/html/your-image.iso ./backup-your-image.iso
+```
+
+### Copy directory with rsync (`oc rsync`)
+
+For large files or multiple ISOs, `oc rsync` supports resumable transfers:
+
+```bash
+POD=$(oc get pods -l app=iso-share -o jsonpath='{.items[0].metadata.name}')
+oc rsync $POD:/usr/share/nginx/html/ ./local-backup-dir/
+```
+
+### Download via the Route (HTTP)
+
+If you have network access to the Route:
+
+```bash
+ROUTE=$(oc get route iso-share -o jsonpath='{.spec.host}')
+curl -k -o backup-your-image.iso "https://$ROUTE/your-image.iso"
+```
+
+### PVC snapshot
+
+For a volume-level backup (requires a StorageClass that supports snapshots):
+
+```bash
+oc create snapshot -n iso-share iso-backup-snapshot --volume=iso-storage
+```
+
 ## Customization
 
 - **Storage size**: Edit `pvc.yaml` and change `storage: 10Gi` to your needs
