@@ -68,11 +68,7 @@ curl -k -o backup-your-image.iso "https://$ROUTE/your-image.iso"
 
 ### PVC snapshot
 
-For a volume-level backup (requires a StorageClass that supports snapshots):
-
-```bash
-oc create snapshot -n iso-share iso-backup-snapshot --volume=iso-storage
-```
+For a volume-level backup, create a VolumeSnapshot (requires a StorageClass that supports snapshots, e.g. OpenShift Data Foundation). Use the OpenShift Console: **Storage → Persistent Volume Claims →** select `iso-storage` **→ Actions → Create Snapshot**. Or apply a `VolumeSnapshot` manifest for your storage provider.
 
 ## Customization
 
