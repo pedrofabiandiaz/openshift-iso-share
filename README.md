@@ -27,11 +27,7 @@ POD=$(oc get pods -l app=iso-share -o jsonpath='{.items[0].metadata.name}')
 oc cp /path/to/your-image.iso $POD:/usr/share/nginx/html/
 ```
 
-Or using `rsync` for large files (resumable):
-
-```bash
-oc rsync /path/to/your-image.iso $POD:/usr/share/nginx/html/
-```
+> **Note:** `oc rsync` does not work with this deployment—the nginx image does not include rsync. Use `oc cp` for uploads.
 
 ## Accessing the ISO
 
@@ -48,13 +44,13 @@ POD=$(oc get pods -l app=iso-share -o jsonpath='{.items[0].metadata.name}')
 oc cp $POD:/usr/share/nginx/html/your-image.iso ./backup-your-image.iso
 ```
 
-### Copy directory with rsync (`oc rsync`)
+### Copy directory (`oc cp`)
 
-For large files or multiple ISOs, `oc rsync` supports resumable transfers:
+The nginx image does not include rsync, so `oc rsync` will not work. Use `oc cp` to back up the entire directory:
 
 ```bash
 POD=$(oc get pods -l app=iso-share -o jsonpath='{.items[0].metadata.name}')
-oc rsync $POD:/usr/share/nginx/html/ ./local-backup-dir/
+oc cp $POD:/usr/share/nginx/html/ ./local-backup-dir/
 ```
 
 ### Download via the Route (HTTP)
